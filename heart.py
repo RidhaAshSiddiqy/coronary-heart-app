@@ -28,7 +28,7 @@ class CoronaryHeartPredictor:
         """Load dan preprocess data dari path yang sudah ditentukan"""
         try:
             # Load data dengan path hardcoded
-            self.df = pd.read_csv('C:\Users\Win10\Documents\Dataset\WorldCoronaryHeart.csv')
+            self.df = pd.read_csv('WorldCoronaryHeart.csv')
             
             # Preprocessing target variable
             self.df['Target'] = self.df['Diagnostic_Results'].apply(
@@ -917,4 +917,5 @@ def display_risk_analysis(input_data):
 if __name__ == "__main__":
 
     main()
+
 
