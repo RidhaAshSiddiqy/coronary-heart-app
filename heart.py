@@ -915,4 +915,5 @@ def display_risk_analysis(input_data):
             st.write(f"• {rec}")
 
 if __name__ == "__main__":
+
     main()
