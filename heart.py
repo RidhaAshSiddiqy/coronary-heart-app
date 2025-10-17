@@ -5,13 +5,12 @@ import streamlit as st
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score
 from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -28,6 +27,8 @@ class CoronaryHeartPredictor:
         self.smote_applied = False
         self.class_distribution_before = None
         self.class_distribution_after = None
+        self.cv_scores_rf = None
+        self.cv_scores_lr = None
     
     def load_and_preprocess_data(self):
         """Load dan preprocess data dari path yang sudah ditentukan"""
@@ -109,7 +110,7 @@ class CoronaryHeartPredictor:
         return X
     
     def auto_train_models(self):
-        """Automatically train models with SMOTE for handling class imbalance"""
+        """Automatically train models with robust anti-overfitting techniques"""
         if self.models_trained:
             return True
             
@@ -139,13 +140,13 @@ class CoronaryHeartPredictor:
         # Preprocessing
         X = self._preprocess_features(X)
         
-        # Split data
+        # Split data dengan test size yang lebih besar untuk validasi lebih robust
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=0.3, random_state=42, stratify=y
         )
         
-        # Apply SMOTE to training data only
-        smote = SMOTE(random_state=42)
+        # Apply SMOTE to training data only dengan parameter yang lebih konservatif
+        smote = SMOTE(random_state=42, k_neighbors=3)  # Reduced k_neighbors untuk data yang lebih kecil
         X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
         self.smote_applied = True
         self.class_distribution_after = y_train_resampled.value_counts()
@@ -154,26 +155,35 @@ class CoronaryHeartPredictor:
         X_train_scaled = self.scaler.fit_transform(X_train_resampled)
         X_test_scaled = self.scaler.transform(X_test)
         
-        # Train Random Forest
+        # Train Random Forest dengan STRONG REGULARIZATION untuk mencegah overfitting
         self.rf_model = RandomForestClassifier(
-            n_estimators=200,
-            max_depth=15,
-            min_samples_split=5,
-            min_samples_leaf=2,
+            n_estimators=100,           # Reduced number of trees
+            max_depth=8,                # Shallower trees
+            min_samples_split=15,       # More samples required to split
+            min_samples_leaf=8,         # More samples required in leaf nodes
+            max_features='sqrt',        # Limit features per split
+            bootstrap=True,
+            oob_score=True,             # Enable out-of-bag scoring
             random_state=42,
             n_jobs=-1,
-            class_weight='balanced'  # Additional balancing
+            class_weight='balanced'
         )
         self.rf_model.fit(X_train_scaled, y_train_resampled)
         
-        # Train Logistic Regression
+        # Train Logistic Regression dengan regularization
         self.lr_model = LogisticRegression(
-            C=1.0,
+            C=0.5,           # Moderate regularization
             max_iter=1000,
             random_state=42,
-            class_weight='balanced'  # Additional balancing
+            class_weight='balanced'
         )
         self.lr_model.fit(X_train_scaled, y_train_resampled)
+        
+        # Perform cross-validation untuk mendapatkan estimasi performa yang lebih reliable
+        self.cv_scores_rf = cross_val_score(self.rf_model, X_train_scaled, y_train_resampled, 
+                                           cv=5, scoring='accuracy')
+        self.cv_scores_lr = cross_val_score(self.lr_model, X_train_scaled, y_train_resampled, 
+                                           cv=5, scoring='accuracy')
         
         self.models_trained = True
         return True
@@ -328,6 +338,20 @@ def main():
             padding: 1.5rem;
             border-radius: 10px;
             border-left: 5px solid #ffc107;
+            margin: 1rem 0;
+        }
+        .overfitting-warning {
+            background-color: #f8d7da;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 5px solid #dc3545;
+            margin: 1rem 0;
+        }
+        .good-model {
+            background-color: #d1ecf1;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 5px solid #17a2b8;
             margin: 1rem 0;
         }
     </style>
@@ -558,6 +582,16 @@ def show_prediction_interface(predictor):
     
     # Model selection for prediction
     st.subheader("🤖 Model Selection")
+    
+    # Model recommendation based on expected performance
+    st.markdown('<div class="good-model">', unsafe_allow_html=True)
+    st.markdown("### 💡 **Model Recommendation**")
+    st.markdown("**Logistic Regression is recommended for more reliable predictions**")
+    st.markdown("- Less prone to overfitting")
+    st.markdown("- Better generalization to new data")
+    st.markdown("- More interpretable results")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     model_choice = st.radio(
         "Choose prediction model:",
         ["Random Forest", "Logistic Regression"],
@@ -623,6 +657,7 @@ def show_prediction_interface(predictor):
                 <h3>{risk_message}</h3>
                 <p><strong>Model Used:</strong> {model_choice}</p>
                 <p><strong>Confidence:</strong> {probability:.2%}</p>
+                <p><strong>Note:</strong> Medical predictions should be verified by healthcare professionals</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -631,11 +666,21 @@ def show_prediction_interface(predictor):
             display_risk_analysis(input_data)
 
 def show_model_accuracy(predictor):
-    """Show model accuracy comparison with SMOTE information"""
+    """Show model accuracy comparison with comprehensive overfitting analysis"""
     st.header("📈 Model Accuracy Comparison")
     
+    # Overfitting warning
+    st.markdown('<div class="overfitting-warning">', unsafe_allow_html=True)
+    st.markdown("### ⚠️ **Overfitting Prevention Measures Applied**")
+    st.markdown("**To prevent overfitting, we have implemented:**")
+    st.markdown("- Strong regularization in Random Forest (shallow trees, more samples required)")
+    st.markdown("- Cross-validation for reliable performance estimation")
+    st.markdown("- Larger test set (30% instead of 20%)")
+    st.markdown("- SMOTE with conservative parameters")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     # Auto train models untuk mendapatkan accuracy
-    with st.spinner("Training models for accuracy comparison..."):
+    with st.spinner("Training models with robust validation..."):
         success = predictor.auto_train_models()
     
     if not success:
@@ -678,41 +723,89 @@ def show_model_accuracy(predictor):
     # Preprocessing
     X = predictor._preprocess_features(X)
     
-    # Split data
+    # Split data (consistent with training)
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.3, random_state=42, stratify=y
     )
     
-    # Scale features (using the same scaler that was fit on SMOTE data)
+    # Scale features
     X_test_scaled = predictor.scaler.transform(X_test)
     
     # Calculate predictions
     rf_pred = predictor.rf_model.predict(X_test_scaled)
     lr_pred = predictor.lr_model.predict(X_test_scaled)
     
-    # Calculate accuracies
+    # Calculate metrics
     rf_accuracy = accuracy_score(y_test, rf_pred)
     lr_accuracy = accuracy_score(y_test, lr_pred)
     
-    # Display metrics
+    rf_precision = precision_score(y_test, rf_pred)
+    lr_precision = precision_score(y_test, lr_pred)
+    
+    rf_recall = recall_score(y_test, rf_pred)
+    lr_recall = recall_score(y_test, lr_pred)
+    
+    rf_f1 = f1_score(y_test, rf_pred)
+    lr_f1 = f1_score(y_test, lr_pred)
+    
+    # Display comprehensive metrics
+    st.subheader("📊 Comprehensive Model Performance")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Random Forest Accuracy", f"{rf_accuracy:.4f}")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.write("**🌲 Random Forest**")
         
-        # RF Classification Report
-        st.subheader("🌲 Random Forest - Classification Report")
+        # Check for potential overfitting
+        if rf_accuracy > 0.95:
+            st.error(f"Accuracy: {rf_accuracy:.4f} ⚠️ POTENTIAL OVERFITTING")
+        elif rf_accuracy > 0.90:
+            st.warning(f"Accuracy: {rf_accuracy:.4f} ⚠️ Monitor for overfitting")
+        else:
+            st.success(f"Accuracy: {rf_accuracy:.4f}")
+            
+        st.write(f"Precision: {rf_precision:.4f}")
+        st.write(f"Recall: {rf_recall:.4f}")
+        st.write(f"F1-Score: {rf_f1:.4f}")
+        
+        # Display cross-validation results
+        if predictor.cv_scores_rf is not None:
+            st.write(f"CV Mean Accuracy: {predictor.cv_scores_rf.mean():.4f}")
+            st.write(f"CV Std: {predictor.cv_scores_rf.std():.4f}")
+        
+        # Display OOB score if available
+        if hasattr(predictor.rf_model, 'oob_score_'):
+            st.write(f"OOB Score: {predictor.rf_model.oob_score_:.4f}")
+    
+    with col2:
+        st.write("**📈 Logistic Regression**")
+        
+        # Logistic Regression is generally more reliable
+        if lr_accuracy > 0.85:
+            st.success(f"Accuracy: {lr_accuracy:.4f} ✅ Good performance")
+        else:
+            st.info(f"Accuracy: {lr_accuracy:.4f}")
+            
+        st.write(f"Precision: {lr_precision:.4f}")
+        st.write(f"Recall: {lr_recall:.4f}")
+        st.write(f"F1-Score: {lr_f1:.4f}")
+        
+        # Display cross-validation results
+        if predictor.cv_scores_lr is not None:
+            st.write(f"CV Mean Accuracy: {predictor.cv_scores_lr.mean():.4f}")
+            st.write(f"CV Std: {predictor.cv_scores_lr.std():.4f}")
+    
+    # Detailed classification reports
+    st.subheader("📋 Detailed Classification Reports")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**🌲 Random Forest**")
         st.text(classification_report(y_test, rf_pred))
     
     with col2:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Logistic Regression Accuracy", f"{lr_accuracy:.4f}")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # LR Classification Report
-        st.subheader("📈 Logistic Regression - Classification Report")
+        st.write("**📈 Logistic Regression**")
         st.text(classification_report(y_test, lr_pred))
     
     # Confusion Matrices
@@ -739,6 +832,47 @@ def show_model_accuracy(predictor):
         ax.set_title('Logistic Regression Confusion Matrix')
         st.pyplot(fig)
     
+    # Overfitting Analysis
+    st.subheader("🔍 Overfitting Analysis")
+    
+    # Calculate training accuracy untuk comparison
+    X_train_scaled = predictor.scaler.transform(X_train)
+    rf_train_pred = predictor.rf_model.predict(X_train_scaled)
+    rf_train_accuracy = accuracy_score(y_train, rf_train_pred)
+    
+    lr_train_pred = predictor.lr_model.predict(X_train_scaled)
+    lr_train_accuracy = accuracy_score(y_train, lr_train_pred)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Random Forest Overfitting Analysis:**")
+        st.write(f"Training Accuracy: {rf_train_accuracy:.4f}")
+        st.write(f"Test Accuracy: {rf_accuracy:.4f}")
+        gap_rf = rf_train_accuracy - rf_accuracy
+        st.write(f"Accuracy Gap: {gap_rf:.4f}")
+        
+        if gap_rf > 0.05:
+            st.error("⚠️ Large gap indicates overfitting")
+        elif gap_rf > 0.02:
+            st.warning("⚠️ Moderate gap - potential overfitting")
+        else:
+            st.success("✅ Good generalization")
+    
+    with col2:
+        st.write("**Logistic Regression Overfitting Analysis:**")
+        st.write(f"Training Accuracy: {lr_train_accuracy:.4f}")
+        st.write(f"Test Accuracy: {lr_accuracy:.4f}")
+        gap_lr = lr_train_accuracy - lr_accuracy
+        st.write(f"Accuracy Gap: {gap_lr:.4f}")
+        
+        if gap_lr > 0.05:
+            st.error("⚠️ Large gap indicates overfitting")
+        elif gap_lr > 0.02:
+            st.warning("⚠️ Moderate gap - potential overfitting")
+        else:
+            st.success("✅ Good generalization")
+    
     # Feature Importance (Random Forest only)
     st.subheader("🔍 Random Forest Feature Importance")
     if predictor.rf_model is not None:
@@ -752,6 +886,10 @@ def show_model_accuracy(predictor):
         ax.set_title('Top 10 Most Important Features (Random Forest)')
         ax.set_xlabel('Feature Importance')
         st.pyplot(fig)
+        
+        # Display feature importance table
+        st.subheader("📋 Feature Importance Table")
+        st.dataframe(feature_importance.head(10))
 
 def show_data_visualization(predictor):
     """Show data visualization - PAKAI DATA BERSIH"""
