@@ -10,6 +10,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -23,6 +25,9 @@ class CoronaryHeartPredictor:
         self.df = None
         self.df_cleaned = None
         self.models_trained = False
+        self.smote_applied = False
+        self.class_distribution_before = None
+        self.class_distribution_after = None
     
     def load_and_preprocess_data(self):
         """Load dan preprocess data dari path yang sudah ditentukan"""
@@ -104,7 +109,7 @@ class CoronaryHeartPredictor:
         return X
     
     def auto_train_models(self):
-        """Automatically train models when needed"""
+        """Automatically train models with SMOTE for handling class imbalance"""
         if self.models_trained:
             return True
             
@@ -128,6 +133,9 @@ class CoronaryHeartPredictor:
         X = self.df_cleaned[available_features].copy()
         y = self.df_cleaned['Target']
         
+        # Store class distribution before SMOTE
+        self.class_distribution_before = y.value_counts()
+        
         # Preprocessing
         X = self._preprocess_features(X)
         
@@ -136,8 +144,14 @@ class CoronaryHeartPredictor:
             X, y, test_size=0.2, random_state=42, stratify=y
         )
         
+        # Apply SMOTE to training data only
+        smote = SMOTE(random_state=42)
+        X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
+        self.smote_applied = True
+        self.class_distribution_after = y_train_resampled.value_counts()
+        
         # Scale features
-        X_train_scaled = self.scaler.fit_transform(X_train)
+        X_train_scaled = self.scaler.fit_transform(X_train_resampled)
         X_test_scaled = self.scaler.transform(X_test)
         
         # Train Random Forest
@@ -147,17 +161,19 @@ class CoronaryHeartPredictor:
             min_samples_split=5,
             min_samples_leaf=2,
             random_state=42,
-            n_jobs=-1
+            n_jobs=-1,
+            class_weight='balanced'  # Additional balancing
         )
-        self.rf_model.fit(X_train_scaled, y_train)
+        self.rf_model.fit(X_train_scaled, y_train_resampled)
         
         # Train Logistic Regression
         self.lr_model = LogisticRegression(
             C=1.0,
             max_iter=1000,
-            random_state=42
+            random_state=42,
+            class_weight='balanced'  # Additional balancing
         )
-        self.lr_model.fit(X_train_scaled, y_train)
+        self.lr_model.fit(X_train_scaled, y_train_resampled)
         
         self.models_trained = True
         return True
@@ -307,6 +323,13 @@ def main():
             border-left: 5px solid #28a745;
             margin: 1rem 0;
         }
+        .smote-info {
+            background-color: #fff3cd;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 5px solid #ffc107;
+            margin: 1rem 0;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -367,6 +390,42 @@ def show_data_analysis(predictor):
         st.metric("High Risk Cases", target_counts[1])
     with col4:
         st.metric("Low Risk Cases", target_counts[0])
+    
+    # Class Distribution Analysis
+    st.subheader("🎯 Class Distribution Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Original Class Distribution:**")
+        fig1, ax1 = plt.subplots(figsize=(6, 4))
+        colors = ['#28a745', '#e63946']
+        target_counts.plot(kind='bar', ax=ax1, color=colors)
+        ax1.set_title('Original Class Distribution')
+        ax1.set_xlabel('Risk Category')
+        ax1.set_ylabel('Count')
+        ax1.set_xticklabels(['Low Risk', 'High Risk'], rotation=0)
+        
+        # Add value labels on bars
+        for i, v in enumerate(target_counts):
+            ax1.text(i, v + 5, str(v), ha='center', va='bottom', fontweight='bold')
+        
+        st.pyplot(fig1)
+    
+    with col2:
+        st.write("**Class Distribution Percentage:**")
+        fig2, ax2 = plt.subplots(figsize=(6, 4))
+        percentages = (target_counts / len(cleaned_df)) * 100
+        wedges, texts, autotexts = ax2.pie(percentages, labels=['Low Risk', 'High Risk'], 
+                                          autopct='%1.1f%%', colors=colors, startangle=90)
+        ax2.set_title('Class Distribution (%)')
+        
+        # Improve label visibility
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontweight('bold')
+        
+        st.pyplot(fig2)
     
     # Missing Values Analysis - BEFORE vs AFTER CLEANING
     st.subheader("🔧 Data Cleaning Report")
@@ -505,6 +564,15 @@ def show_prediction_interface(predictor):
         horizontal=True
     )
     
+    # SMOTE Information
+    st.markdown('<div class="smote-info">', unsafe_allow_html=True)
+    st.markdown("### 🔄 **SMOTE Applied for Class Imbalance**")
+    st.markdown("**To handle class imbalance, we use SMOTE (Synthetic Minority Over-sampling Technique):**")
+    st.markdown("- Generates synthetic samples for minority class")
+    st.markdown("- Improves model performance on imbalanced data")
+    st.markdown("- Applied only to training data (not test data)")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     # Prepare input data
     input_data = {
         'Age': age,
@@ -563,7 +631,7 @@ def show_prediction_interface(predictor):
             display_risk_analysis(input_data)
 
 def show_model_accuracy(predictor):
-    """Show model accuracy comparison"""
+    """Show model accuracy comparison with SMOTE information"""
     st.header("📈 Model Accuracy Comparison")
     
     # Auto train models untuk mendapatkan accuracy
@@ -574,6 +642,28 @@ def show_model_accuracy(predictor):
         st.error("❌ Cannot load dataset. Please ensure the dataset file exists in the correct location.")
         return
     
+    # Display SMOTE information
+    if predictor.smote_applied and predictor.class_distribution_before is not None:
+        st.markdown('<div class="smote-info">', unsafe_allow_html=True)
+        st.markdown("### 🔄 **SMOTE Class Balancing Applied**")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Before SMOTE:**")
+            st.write(f"Low Risk (0): {predictor.class_distribution_before[0]}")
+            st.write(f"High Risk (1): {predictor.class_distribution_before[1]}")
+            imbalance_ratio = predictor.class_distribution_before[1] / predictor.class_distribution_before[0]
+            st.write(f"Imbalance Ratio: {imbalance_ratio:.2f}")
+        
+        with col2:
+            st.write("**After SMOTE (Training Data):**")
+            st.write(f"Low Risk (0): {predictor.class_distribution_after[0]}")
+            st.write(f"High Risk (1): {predictor.class_distribution_after[1]}")
+            st.write("Balanced: ✅")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
     # Select relevant features
     feature_columns = [
         'Age', 'Gender', 'BloodGlucose', 'TotCholesterol', 'LDL', 'HDL', 
@@ -581,7 +671,6 @@ def show_model_accuracy(predictor):
         'BMI', 'Physical_Activity', 'Diet_Habits', 'Smoking_History',
         'Diabetes_History', 'Hypertension_History', 'Family_History'
     ]
-    
     available_features = [col for col in feature_columns if col in predictor.df_cleaned.columns]
     X = predictor.df_cleaned[available_features].copy()
     y = predictor.df_cleaned['Target']
@@ -594,7 +683,7 @@ def show_model_accuracy(predictor):
         X, y, test_size=0.2, random_state=42, stratify=y
     )
     
-    # Scale features
+    # Scale features (using the same scaler that was fit on SMOTE data)
     X_test_scaled = predictor.scaler.transform(X_test)
     
     # Calculate predictions
@@ -649,6 +738,20 @@ def show_model_accuracy(predictor):
         ax.set_ylabel('Actual')
         ax.set_title('Logistic Regression Confusion Matrix')
         st.pyplot(fig)
+    
+    # Feature Importance (Random Forest only)
+    st.subheader("🔍 Random Forest Feature Importance")
+    if predictor.rf_model is not None:
+        feature_importance = pd.DataFrame({
+            'feature': available_features,
+            'importance': predictor.rf_model.feature_importances_
+        }).sort_values('importance', ascending=False)
+        
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.barplot(data=feature_importance.head(10), x='importance', y='feature', ax=ax)
+        ax.set_title('Top 10 Most Important Features (Random Forest)')
+        ax.set_xlabel('Feature Importance')
+        st.pyplot(fig)
 
 def show_data_visualization(predictor):
     """Show data visualization - PAKAI DATA BERSIH"""
@@ -664,7 +767,7 @@ def show_data_visualization(predictor):
         "Choose Visualization:",
         ["Target Distribution", "Age Distribution", "Blood Metrics Distribution", 
          "BMI vs Blood Pressure", "Correlation Heatmap", "Gender Distribution",
-         "Blood Pressure Categories", "Risk by Age Group"]
+         "Blood Pressure Categories", "Risk by Age Group", "Feature Distributions"]
     )
     
     if viz_option == "Target Distribution":
@@ -854,6 +957,29 @@ def show_data_visualization(predictor):
         # Tampilkan juga tabel frekuensi
         st.subheader("📋 Age Group Distribution - Frequency Table")
         st.dataframe(age_risk)
+    
+    elif viz_option == "Feature Distributions":
+        st.subheader("📊 Feature Distributions by Risk Category")
+        
+        # Select feature to visualize
+        numerical_features = ['Age', 'BloodGlucose', 'TotCholesterol', 'LDL', 'HDL', 
+                             'Triglyceride', 'Sistole', 'Diastole', 'BMI']
+        selected_feature = st.selectbox("Select Feature:", numerical_features)
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+        
+        # Histogram
+        sns.histplot(data=df, x=selected_feature, hue='Target', 
+                    bins=20, kde=True, ax=ax1)
+        ax1.set_title(f'{selected_feature} Distribution by Risk Category')
+        ax1.legend(['Low Risk', 'High Risk'])
+        
+        # Box plot
+        sns.boxplot(data=df, x='Target', y=selected_feature, ax=ax2)
+        ax2.set_title(f'{selected_feature} by Risk Category')
+        ax2.set_xticklabels(['Low Risk', 'High Risk'])
+        
+        st.pyplot(fig)
 
 def display_risk_analysis(input_data):
     """Display risk factors analysis"""
@@ -915,7 +1041,7 @@ def display_risk_analysis(input_data):
             st.write(f"• {rec}")
 
 if __name__ == "__main__":
-
     main()
+
 
 
