@@ -758,7 +758,7 @@ def show_model_accuracy(predictor):
         
         # Check for potential overfitting
         if rf_accuracy > 0.95:
-            st.error(f"Accuracy: {rf_accuracy:.4f} ⚠️ POTENTIAL OVERFITTING")
+            st.error(f"Accuracy: {rf_accuracy:.4f} ⚠️ Potential Overfitting")
         elif rf_accuracy > 0.90:
             st.warning(f"Accuracy: {rf_accuracy:.4f} ⚠️ Monitor for overfitting")
         else:
@@ -782,7 +782,7 @@ def show_model_accuracy(predictor):
         
         # Logistic Regression is generally more reliable
         if lr_accuracy > 0.85:
-            st.success(f"Accuracy: {lr_accuracy:.4f} ✅ Good performance")
+            st.success(f"Accuracy: {lr_accuracy:.4f} ✅ Good Performance")
         else:
             st.info(f"Accuracy: {lr_accuracy:.4f}")
             
@@ -1180,6 +1180,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
