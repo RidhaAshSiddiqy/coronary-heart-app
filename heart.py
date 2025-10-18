@@ -31,9 +31,9 @@ class CoronaryHeartPredictor:
         self.cv_scores_lr = None
     
     def load_and_preprocess_data(self):
-        """Load dan preprocess data dari path yang sudah ditentukan"""
+        """Load and preprocess data from specified path"""
         try:
-            # Load data dengan path hardcoded
+            # Load data with hardcoded path
             self.df = pd.read_csv('WorldCoronaryHeart.csv')
             
             # Preprocessing target variable
@@ -41,7 +41,7 @@ class CoronaryHeartPredictor:
                 lambda x: 1 if 'Increasing to Coronary Heart' in str(x) else 0
             )
             
-            # Auto-cleaning: Bersihkan data secara otomatis
+            # Auto-cleaning: Clean data automatically
             self.df_cleaned = self._clean_dataset(self.df)
             
             return True
@@ -51,27 +51,27 @@ class CoronaryHeartPredictor:
             return False
     
     def _clean_dataset(self, df):
-        """Bersihkan dataset dari missing values dan masalah data - SEMUA MISSING VALUES DIUBAH MENJADI 0"""
+        """Clean dataset from missing values and data issues - ALL MISSING VALUES CHANGED TO 0"""
         df_clean = df.copy()
         
         # 1. Handle BMI format (convert from string to float)
         if 'BMI' in df_clean.columns:
             df_clean['BMI'] = df_clean['BMI'].astype(str).str.replace(',', '.').astype(float)
         
-        # 2. Handle missing values untuk SEMUA KOLOM - DIUBAH MENJADI 0
+        # 2. Handle missing values for ALL COLUMNS - CHANGED TO 0
         for col in df_clean.columns:
             if df_clean[col].isnull().sum() > 0:
-                # Untuk numerical columns, isi dengan 0
+                # For numerical columns, fill with 0
                 if df_clean[col].dtype in ['int64', 'float64']:
                     df_clean[col].fillna(0, inplace=True)
-                # Untuk categorical columns, isi dengan 'Unknown' atau '0'
+                # For categorical columns, fill with 'Unknown' or '0'
                 else:
                     df_clean[col].fillna('Unknown', inplace=True)
         
         return df_clean
     
     def get_data_for_visualization(self):
-        """Return dataframe untuk visualisasi - SUDAH DIBERSIHKAN"""
+        """Return dataframe for visualization - ALREADY CLEANED"""
         if self.df_cleaned is None:
             success = self.load_and_preprocess_data()
             if not success:
@@ -79,23 +79,23 @@ class CoronaryHeartPredictor:
         return self.df_cleaned
     
     def get_original_data_with_missing_info(self):
-        """Return data original dengan info missing values untuk analysis"""
+        """Return original data with missing values info for analysis"""
         if self.df is None:
             success = self.load_and_preprocess_data()
             if not success:
                 return None, None, None, None
         
-        # Hitung missing values sebelum cleaning
+        # Calculate missing values before cleaning
         missing_before = self.df.isnull().sum()
         missing_before_pct = (missing_before / len(self.df)) * 100
         
-        # Hitung missing values setelah cleaning
+        # Calculate missing values after cleaning
         missing_after = self.df_cleaned.isnull().sum()
         
         return self.df, missing_before, missing_before_pct, missing_after
     
     def _preprocess_features(self, X):
-        """Preprocess features untuk training"""
+        """Preprocess features for training"""
         # Encode categorical variables
         categorical_columns = ['Gender', 'Physical_Activity', 'Diet_Habits', 
                              'Smoking_History', 'Diabetes_History', 
@@ -140,13 +140,13 @@ class CoronaryHeartPredictor:
         # Preprocessing
         X = self._preprocess_features(X)
         
-        # Split data dengan test size yang lebih besar untuk validasi lebih robust
+        # Split data with larger test size for more robust validation
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.3, random_state=42, stratify=y
         )
         
-        # Apply SMOTE to training data only dengan parameter yang lebih konservatif
-        smote = SMOTE(random_state=42, k_neighbors=3)  # Reduced k_neighbors untuk data yang lebih kecil
+        # Apply SMOTE to training data only with more conservative parameters
+        smote = SMOTE(random_state=42, k_neighbors=3)  # Reduced k_neighbors for smaller data
         X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
         self.smote_applied = True
         self.class_distribution_after = y_train_resampled.value_counts()
@@ -155,7 +155,7 @@ class CoronaryHeartPredictor:
         X_train_scaled = self.scaler.fit_transform(X_train_resampled)
         X_test_scaled = self.scaler.transform(X_test)
         
-        # Train Random Forest dengan STRONG REGULARIZATION untuk mencegah overfitting
+        # Train Random Forest with STRONG REGULARIZATION to prevent overfitting
         self.rf_model = RandomForestClassifier(
             n_estimators=100,           # Reduced number of trees
             max_depth=8,                # Shallower trees
@@ -170,7 +170,7 @@ class CoronaryHeartPredictor:
         )
         self.rf_model.fit(X_train_scaled, y_train_resampled)
         
-        # Train Logistic Regression dengan regularization
+        # Train Logistic Regression with regularization
         self.lr_model = LogisticRegression(
             C=0.5,           # Moderate regularization
             max_iter=1000,
@@ -179,7 +179,7 @@ class CoronaryHeartPredictor:
         )
         self.lr_model.fit(X_train_scaled, y_train_resampled)
         
-        # Perform cross-validation untuk mendapatkan estimasi performa yang lebih reliable
+        # Perform cross-validation to get more reliable performance estimates
         self.cv_scores_rf = cross_val_score(self.rf_model, X_train_scaled, y_train_resampled, 
                                            cv=5, scoring='accuracy')
         self.cv_scores_lr = cross_val_score(self.lr_model, X_train_scaled, y_train_resampled, 
@@ -189,7 +189,7 @@ class CoronaryHeartPredictor:
         return True
     
     def save_models(self, filepath):
-        """Save models dan preprocessing objects"""
+        """Save models and preprocessing objects"""
         joblib.dump({
             'rf_model': self.rf_model,
             'lr_model': self.lr_model,
@@ -199,7 +199,7 @@ class CoronaryHeartPredictor:
         }, filepath)
     
     def load_models(self, filepath):
-        """Load models dan preprocessing objects"""
+        """Load models and preprocessing objects"""
         try:
             loaded = joblib.load(filepath)
             self.rf_model = loaded['rf_model']
@@ -213,9 +213,9 @@ class CoronaryHeartPredictor:
             return False
     
     def predict(self, input_data, model_type='rf'):
-        """Make prediction dengan model pilihan"""
+        """Make prediction with selected model"""
         if not self.models_trained:
-            # Auto train models jika belum di-train
+            # Auto train models if not trained
             success = self.auto_train_models()
             if not success:
                 return None, 0
@@ -240,7 +240,7 @@ class CoronaryHeartPredictor:
         return prediction, max(probability)
     
     def _preprocess_user_input(self, input_data):
-        """Preprocess user input untuk prediction"""
+        """Preprocess user input for prediction"""
         try:
             # Create feature array in correct order
             feature_array = []
@@ -364,7 +364,7 @@ def main():
     # Initialize predictor
     predictor = CoronaryHeartPredictor()
 
-    # Sidebar - HANYA NAVIGATION
+    # Sidebar - ONLY NAVIGATION
     st.sidebar.title("Navigation")
     
     # Main content navigation
@@ -382,7 +382,7 @@ def main():
     else:
         show_data_visualization(predictor)
 
-    # Footer dengan copyright yang benar
+    # Footer with correct copyright
     st.markdown("---")
     st.markdown('<div class="footer">', unsafe_allow_html=True)
     st.markdown("### Copyright © 2025 - Coronary Heart Disease Prediction System")
@@ -390,10 +390,10 @@ def main():
     st.markdown('</div>', unsafe_allow_html=True)
 
 def show_data_analysis(predictor):
-    """Show data analysis interface - DENGAN INFO CLEANING"""
+    """Show data analysis interface - WITH CLEANING INFO"""
     st.header("📊 Data Analysis")
     
-    # Dapatkan data original dan info missing values
+    # Get original data and missing values info
     original_df, missing_before, missing_before_pct, missing_after = predictor.get_original_data_with_missing_info()
     cleaned_df = predictor.get_data_for_visualization()
     
@@ -401,7 +401,7 @@ def show_data_analysis(predictor):
         st.error("❌ Cannot load dataset. Please ensure the dataset file exists in the correct location.")
         return
     
-    # Basic statistics - PAKAI DATA BERSIH
+    # Basic statistics - USE CLEANED DATA
     st.subheader("📈 Dataset Overview (After Cleaning)")
     col1, col2, col3, col4 = st.columns(4)
     
@@ -454,7 +454,7 @@ def show_data_analysis(predictor):
     # Missing Values Analysis - BEFORE vs AFTER CLEANING
     st.subheader("🔧 Data Cleaning Report")
     
-    # Hitung total missing values sebelum cleaning
+    # Calculate total missing values before cleaning
     total_missing_before = missing_before.sum()
     total_missing_after = missing_after.sum()
     
@@ -468,7 +468,7 @@ def show_data_analysis(predictor):
         st.metric("Missing Values After Cleaning", total_missing_after, 
                  delta=delta_label)
     
-    # Tampilkan detail missing values per kolom (sebelum cleaning)
+    # Show missing values details per column (before cleaning)
     st.subheader("📋 Missing Values Analysis (Before Cleaning)")
     
     if total_missing_before > 0:
@@ -477,35 +477,35 @@ def show_data_analysis(predictor):
             'Missing Values': missing_before.values,
             'Percentage': missing_before_pct.values
         })
-        # Hanya tampilkan kolom dengan missing values
+        # Only show columns with missing values
         missing_df_display = missing_df[missing_df['Missing Values'] > 0].sort_values('Percentage', ascending=False)
         
         if not missing_df_display.empty:
             st.dataframe(missing_df_display)
             
-            # Info cleaning yang dilakukan - SEMUA DIUBAH MENJADI 0
+            # Cleaning info applied - ALL CHANGED TO 0
             st.markdown('<div class="zero-missing">', unsafe_allow_html=True)
             st.markdown("### ✅ **Auto-Cleaning Applied**")
-            st.markdown("**SEMUA MISSING VALUES TELAH DIUBAH MENJADI 0:**")
-            st.markdown("- **Numerical features:** Diisi dengan 0")
-            st.markdown("- **Categorical features:** Diisi dengan 'Unknown'") 
+            st.markdown("**ALL MISSING VALUES HAVE BEEN CHANGED TO 0:**")
+            st.markdown("- **Numerical features:** Filled with 0")
+            st.markdown("- **Categorical features:** Filled with 'Unknown'") 
             st.markdown("- **BMI format:** Converted from string to float")
-            st.markdown("### 🎯 **Semua missing values sekarang bernilai 0**")
+            st.markdown("### 🎯 **All missing values are now 0**")
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.success("🎉 **Dataset Status:** No missing values found in the displayed columns!")
     else:
         st.success("🎉 **Dataset Status:** No missing values found in the entire dataset!")
     
-    # Dataset preview - PAKAI DATA BERSIH
+    # Dataset preview - USE CLEANED DATA
     st.subheader("👀 Data Preview (After Cleaning - All Missing Values = 0)")
     st.dataframe(cleaned_df.head(10))
     
-    # Statistical summary - PAKAI DATA BERSIH
+    # Statistical summary - USE CLEANED DATA
     st.subheader("📊 Statistical Summary (After Cleaning - All Missing Values = 0)")
     st.dataframe(cleaned_df.describe())
     
-    # Verifikasi bahwa tidak ada missing values setelah cleaning
+    # Verify that there are no missing values after cleaning
     st.subheader("✅ Data Quality Verification")
     col1, col2, col3 = st.columns(3)
     
@@ -679,7 +679,7 @@ def show_model_accuracy(predictor):
     st.markdown("- SMOTE with conservative parameters")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Auto train models untuk mendapatkan accuracy
+    # Auto train models to get accuracy
     with st.spinner("Training models with robust validation..."):
         success = predictor.auto_train_models()
     
@@ -835,7 +835,7 @@ def show_model_accuracy(predictor):
     # Overfitting Analysis
     st.subheader("🔍 Overfitting Analysis")
     
-    # Calculate training accuracy untuk comparison
+    # Calculate training accuracy for comparison
     X_train_scaled = predictor.scaler.transform(X_train)
     rf_train_pred = predictor.rf_model.predict(X_train_scaled)
     rf_train_accuracy = accuracy_score(y_train, rf_train_pred)
@@ -892,7 +892,7 @@ def show_model_accuracy(predictor):
         st.dataframe(feature_importance.head(10))
 
 def show_data_visualization(predictor):
-    """Show data visualization - PAKAI DATA BERSIH"""
+    """Show data visualization - USE CLEANED DATA"""
     st.header("📊 Data Visualization")
     
     df = predictor.get_data_for_visualization()
@@ -937,19 +937,19 @@ def show_data_visualization(predictor):
         ax.set_title(f'{selected_metric} Distribution by Risk Category')
         ax.set_xticklabels(['Low Risk', 'High Risk'])
         
-        # Tambahkan label nilai pada boxplot
+        # Add value labels to boxplot
         for i, box in enumerate(ax.artists):
-            # Dapatkan statistik untuk setiap box
+            # Get statistics for each box
             stats = df.groupby('Target')[selected_metric].describe()
             median_val = stats.loc[i, '50%']
             q1_val = stats.loc[i, '25%']
             q3_val = stats.loc[i, '75%']
             
-            # Tambahkan teks untuk median
+            # Add text for median
             ax.text(i, median_val, f'Median: {median_val:.1f}', 
                    ha='center', va='bottom', fontweight='bold', color='red')
             
-            # Tambahkan teks untuk Q1 dan Q3
+            # Add text for Q1 and Q3
             ax.text(i, q1_val, f'Q1: {q1_val:.1f}', 
                    ha='center', va='top', fontsize=8, color='blue')
             ax.text(i, q3_val, f'Q3: {q3_val:.1f}', 
@@ -972,7 +972,7 @@ def show_data_visualization(predictor):
         st.subheader("🔗 Feature Correlation Heatmap")
         # Select numerical columns for correlation
         numerical_cols = df.select_dtypes(include=[np.number]).columns
-        # Remove Target dari correlation
+        # Remove Target from correlation
         numerical_cols = [col for col in numerical_cols if col != 'Target']
         corr_matrix = df[numerical_cols].corr()
         
@@ -987,7 +987,7 @@ def show_data_visualization(predictor):
         gender_risk = pd.crosstab(df['Gender'], df['Target'])
         gender_risk_pct = gender_risk.div(gender_risk.sum(axis=1), axis=0) * 100
         
-        # Plot bar chart dengan persentase
+        # Plot bar chart with percentages
         bars = gender_risk_pct.plot(kind='bar', ax=ax, color=['#28a745', '#e63946'])
         ax.set_title('Gender Distribution by Risk Category (%)')
         ax.set_xlabel('Gender')
@@ -995,7 +995,7 @@ def show_data_visualization(predictor):
         ax.legend(['Low Risk', 'High Risk'])
         ax.tick_params(axis='x', rotation=0)
         
-        # Tambahkan label persentase di atas setiap bar
+        # Add percentage labels above each bar
         for i, (idx, row) in enumerate(gender_risk_pct.iterrows()):
             for j, value in enumerate(row):
                 ax.text(i, value + 1, f'{value:.1f}%', 
@@ -1003,7 +1003,7 @@ def show_data_visualization(predictor):
         
         st.pyplot(fig)
         
-        # Tampilkan juga tabel frekuensi
+        # Also show frequency table
         st.subheader("📋 Gender Distribution - Frequency Table")
         st.dataframe(gender_risk)
     
@@ -1037,29 +1037,48 @@ def show_data_visualization(predictor):
         
         st.pyplot(fig)
         
-        # Tampilkan juga distribusi berdasarkan risk category
-        st.subheader("🩺 Blood Pressure Categories by Risk")
+        # Also show distribution by risk category - FIXED VERSION
+        st.subheader("🩺 Blood Pressure Categories by Risk Level")
         fig2, ax2 = plt.subplots(figsize=(12, 6))
         bp_risk = pd.crosstab(df_bp['BP_Category'], df_bp['Target'])
+        
+        # Ensure both risk categories are present (0 and 1)
+        if 0 not in bp_risk.columns:
+            bp_risk[0] = 0
+        if 1 not in bp_risk.columns:
+            bp_risk[1] = 0
+            
+        bp_risk = bp_risk[[0, 1]]  # Ensure correct order
+        
         bp_risk_pct = bp_risk.div(bp_risk.sum(axis=1), axis=0) * 100
         
-        bars = bp_risk_pct.plot(kind='bar', ax=ax2, color=['#28a745', '#e63946'])
+        # Use grouped bar chart instead of stacked for better visibility
+        x_pos = np.arange(len(bp_risk_pct))
+        width = 0.35
+        
+        bars1 = ax2.bar(x_pos - width/2, bp_risk_pct[0], width, label='Low Risk', color='#28a745')
+        bars2 = ax2.bar(x_pos + width/2, bp_risk_pct[1], width, label='High Risk', color='#e63946')
+        
         ax2.set_title('Blood Pressure Categories by Risk Level (%)')
         ax2.set_xlabel('Blood Pressure Category')
         ax2.set_ylabel('Percentage')
-        ax2.legend(['Low Risk', 'High Risk'])
-        ax2.tick_params(axis='x', rotation=45)
+        ax2.set_xticks(x_pos)
+        ax2.set_xticklabels(bp_risk_pct.index, rotation=45)
+        ax2.legend()
         
-        # Tambahkan label persentase di atas setiap bar
-        for i, (idx, row) in enumerate(bp_risk_pct.iterrows()):
-            total_height = 0
-            for j, value in enumerate(row):
-                if value > 5:  # Hanya tambahkan label jika persentase cukup besar
-                    ax2.text(i, total_height + value/2, f'{value:.1f}%', 
-                           ha='center', va='center', fontweight='bold', color='white')
-                total_height += value
+        # Add value labels on bars
+        for bars in [bars1, bars2]:
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0:  # Only add label if height is greater than 0
+                    ax2.text(bar.get_x() + bar.get_width()/2., height + 1,
+                            f'{height:.1f}%', ha='center', va='bottom', fontweight='bold')
         
         st.pyplot(fig2)
+        
+        # Show frequency table
+        st.subheader("📋 Blood Pressure Categories - Frequency Table")
+        st.dataframe(bp_risk)
     
     elif viz_option == "Risk by Age Group":
         st.subheader("📊 Risk Distribution by Age Group")
@@ -1073,26 +1092,32 @@ def show_data_visualization(predictor):
         age_risk_pct = age_risk.div(age_risk.sum(axis=1), axis=0) * 100
         
         fig, ax = plt.subplots(figsize=(12, 6))
-        bars = age_risk_pct.plot(kind='bar', ax=ax, color=['#28a745', '#e63946'])
+        
+        # Use grouped bar chart for better visibility
+        x_pos = np.arange(len(age_risk_pct))
+        width = 0.35
+        
+        bars1 = ax.bar(x_pos - width/2, age_risk_pct[0], width, label='Low Risk', color='#28a745')
+        bars2 = ax.bar(x_pos + width/2, age_risk_pct[1], width, label='High Risk', color='#e63946')
+        
         ax.set_title('Risk Distribution by Age Group (%)')
         ax.set_xlabel('Age Group')
         ax.set_ylabel('Percentage')
-        ax.legend(['Low Risk', 'High Risk'])
-        ax.tick_params(axis='x', rotation=45)
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(age_risk_pct.index)
+        ax.legend()
         
-        # Tambahkan label persentase di atas setiap bar
-        for i, (idx, row) in enumerate(age_risk_pct.iterrows()):
-            total_height = 0
-            for j, value in enumerate(row):
-                if value > 5:  # Hanya tambahkan label jika persentase cukup besar
-                    ax.text(i, total_height + value/2, f'{value:.1f}%', 
-                           ha='center', va='center', fontweight='bold', color='white',
-                           fontsize=8)
-                total_height += value
+        # Add value labels on bars
+        for bars in [bars1, bars2]:
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0:  # Only add label if height is greater than 0
+                    ax.text(bar.get_x() + bar.get_width()/2., height + 1,
+                            f'{height:.1f}%', ha='center', va='bottom', fontweight='bold')
         
         st.pyplot(fig)
         
-        # Tampilkan juga tabel frekuensi
+        # Show frequency table
         st.subheader("📋 Age Group Distribution - Frequency Table")
         st.dataframe(age_risk)
     
