@@ -581,9 +581,6 @@ def show_prediction_interface(predictor):
             ["Normal", "Coronary"]
         )
     
-    # Model selection for prediction
-    st.subheader("🤖 Model Selection")
-    
     # Model recommendation based on expected performance
     st.markdown('<div class="good-model">', unsafe_allow_html=True)
     st.markdown("### 💡 **Model Recommendation**")
@@ -592,6 +589,9 @@ def show_prediction_interface(predictor):
     st.markdown("- Better generalization to new data")
     st.markdown("- More interpretable results")
     st.markdown('</div>', unsafe_allow_html=True)
+
+    # Model selection for prediction
+    st.subheader("🤖 Model Selection")
     
     model_choice = st.radio(
         "Choose prediction model:",
@@ -1206,6 +1206,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
