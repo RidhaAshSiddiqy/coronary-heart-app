@@ -386,7 +386,7 @@ def main():
     st.markdown("---")
     st.markdown('<div class="footer">', unsafe_allow_html=True)
     st.markdown("### Copyright © 2025 - Coronary Heart Disease Prediction System")
-    st.markdown("**Medical AI Assistant for Early Detection of Heart Conditions**")
+    st.markdown("**Medical AI Assistant for Early Detection of Heart Conditions. All Rights Reserved. Created by Ridha Ash Siddiqy**")
     st.markdown('</div>', unsafe_allow_html=True)
 
 def show_data_analysis(predictor):
@@ -1205,6 +1205,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
