@@ -354,6 +354,13 @@ def main():
             border-left: 5px solid #17a2b8;
             margin: 1rem 0;
         }
+        .sidebar-content {
+            padding: 1rem;
+        }
+        .nav-option {
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -365,20 +372,22 @@ def main():
     # Initialize predictor
     predictor = CoronaryHeartPredictor()
 
-    # Sidebar - ONLY NAVIGATION
-    st.sidebar.title("Navigation")
+    # Sidebar - NAVIGATION WITH EMOJIS
+    st.sidebar.title("🧭 Navigation")
     
-    # Main content navigation
-    app_mode = st.sidebar.selectbox(
-        "Choose Section",
-        ["Data Analysis", "Prediction", "Model Accuracy", "Data Visualization"]
+    # Main content navigation with emojis
+    app_mode = st.sidebar.radio(
+        "Choose Section:",
+        ["📊 Data Analysis", "🔍 Prediction", "📈 Model Accuracy", "📉 Data Visualization"],
+        key="navigation"
     )
 
-    if app_mode == "Data Analysis":
+    # Map navigation selection to functions
+    if "Data Analysis" in app_mode:
         show_data_analysis(predictor)
-    elif app_mode == "Prediction":
+    elif "Prediction" in app_mode:
         show_prediction_interface(predictor)
-    elif app_mode == "Model Accuracy":
+    elif "Model Accuracy" in app_mode:
         show_model_accuracy(predictor)
     else:
         show_data_visualization(predictor)
@@ -670,7 +679,7 @@ def show_model_accuracy(predictor):
     """Show model accuracy comparison with comprehensive overfitting analysis"""
     st.header("📈 Model Accuracy Comparison")
     
-    # Overfitting warning
+    # Overfitting warning - POSITIONED AT THE TOP
     st.markdown('<div class="overfitting-warning">', unsafe_allow_html=True)
     st.markdown("### ⚠️ **Overfitting Prevention Measures Applied**")
     st.markdown("**To prevent overfitting, we have implemented:**")
@@ -688,7 +697,7 @@ def show_model_accuracy(predictor):
         st.error("❌ Cannot load dataset. Please ensure the dataset file exists in the correct location.")
         return
     
-    # Display SMOTE information
+    # Display SMOTE information - POSITIONED AFTER TRAINING
     if predictor.smote_applied and predictor.class_distribution_before is not None:
         st.markdown('<div class="smote-info">', unsafe_allow_html=True)
         st.markdown("### 🔄 **SMOTE Class Balancing Applied**")
@@ -1206,6 +1215,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
