@@ -333,20 +333,6 @@ def main():
             border-left: 5px solid #28a745;
             margin: 1rem 0;
         }
-        .smote-info {
-            background-color: #fff3cd;
-            padding: 1.5rem;
-            border-radius: 10px;
-            border-left: 5px solid #ffc107;
-            margin: 1rem 0;
-        }
-        .overfitting-warning {
-            background-color: #f8d7da;
-            padding: 1.5rem;
-            border-radius: 10px;
-            border-left: 5px solid #dc3545;
-            margin: 1rem 0;
-        }
         .good-model {
             background-color: #d1ecf1;
             padding: 1.5rem;
@@ -609,13 +595,7 @@ def show_prediction_interface(predictor):
     )
     
     # SMOTE Information
-    st.markdown('<div class="smote-info">', unsafe_allow_html=True)
-    st.markdown("### 🔄 **SMOTE Applied for Class Imbalance**")
-    st.markdown("**To handle class imbalance, we use SMOTE (Synthetic Minority Over-sampling Technique):**")
-    st.markdown("- Generates synthetic samples for minority class")
-    st.markdown("- Improves model performance on imbalanced data")
-    st.markdown("- Applied only to training data (not test data)")
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.info("**SMOTE Applied for Class Imbalance**: To handle class imbalance, we use SMOTE (Synthetic Minority Over-sampling Technique) which generates synthetic samples for minority class and improves model performance on imbalanced data.")
     
     # Prepare input data
     input_data = {
@@ -686,38 +666,6 @@ def show_model_accuracy(predictor):
     if not success:
         st.error("❌ Cannot load dataset. Please ensure the dataset file exists in the correct location.")
         return
-    
-    # Display SMOTE information - WARNA KUNING
-    if predictor.smote_applied and predictor.class_distribution_before is not None:
-        st.markdown('<div class="smote-info">', unsafe_allow_html=True)
-        st.markdown("### 🔄 **SMOTE Class Balancing Applied**")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.write("**Before SMOTE:**")
-            st.write(f"Low Risk (0): {predictor.class_distribution_before[0]}")
-            st.write(f"High Risk (1): {predictor.class_distribution_before[1]}")
-            imbalance_ratio = predictor.class_distribution_before[1] / predictor.class_distribution_before[0]
-            st.write(f"Imbalance Ratio: {imbalance_ratio:.2f}")
-        
-        with col2:
-            st.write("**After SMOTE (Training Data):**")
-            st.write(f"Low Risk (0): {predictor.class_distribution_after[0]}")
-            st.write(f"High Risk (1): {predictor.class_distribution_after[1]}")
-            st.write("Balanced: ✅")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Overfitting warning - WARNA MERAH - DIPINDAHKAN SETELAH SMOTE
-    st.markdown('<div class="overfitting-warning">', unsafe_allow_html=True)
-    st.markdown("### ⚠️ **Overfitting Prevention Measures Applied**")
-    st.markdown("**To prevent overfitting, we have implemented:**")
-    st.markdown("- Strong regularization in Random Forest (shallow trees, more samples required)")
-    st.markdown("- Cross-validation for reliable performance estimation")
-    st.markdown("- Larger test set (30% instead of 20%)")
-    st.markdown("- SMOTE with conservative parameters")
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # Select relevant features
     feature_columns = [
@@ -1215,6 +1163,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
