@@ -372,25 +372,25 @@ def main():
     # Initialize predictor
     predictor = CoronaryHeartPredictor()
 
-    # Sidebar - NAVIGATION WITH EMOJIS
+    # Sidebar - NAVIGATION WITH EMOJIS - PREDICTION DIBAWAH SEKALI
     st.sidebar.title("🧭 Navigation")
     
-    # Main content navigation with emojis
+    # Main content navigation with emojis - URUTAN DIPERBAIKI
     app_mode = st.sidebar.radio(
         "Choose Section:",
-        ["📊 Data Analysis", "🔍 Prediction", "📈 Model Accuracy", "📉 Data Visualization"],
+        ["📊 Data Analysis", "📈 Model Accuracy", "📉 Data Visualization", "🔍 Prediction"],
         key="navigation"
     )
 
-    # Map navigation selection to functions
+    # Map navigation selection to functions - URUTAN DIPERBAIKI
     if "Data Analysis" in app_mode:
         show_data_analysis(predictor)
-    elif "Prediction" in app_mode:
-        show_prediction_interface(predictor)
     elif "Model Accuracy" in app_mode:
         show_model_accuracy(predictor)
-    else:
+    elif "Data Visualization" in app_mode:
         show_data_visualization(predictor)
+    else:
+        show_prediction_interface(predictor)
 
     # Footer with correct copyright
     st.markdown("---")
@@ -679,16 +679,6 @@ def show_model_accuracy(predictor):
     """Show model accuracy comparison with comprehensive overfitting analysis"""
     st.header("📈 Model Accuracy Comparison")
     
-    # Overfitting warning - POSITIONED AT THE TOP
-    st.markdown('<div class="overfitting-warning">', unsafe_allow_html=True)
-    st.markdown("### ⚠️ **Overfitting Prevention Measures Applied**")
-    st.markdown("**To prevent overfitting, we have implemented:**")
-    st.markdown("- Strong regularization in Random Forest (shallow trees, more samples required)")
-    st.markdown("- Cross-validation for reliable performance estimation")
-    st.markdown("- Larger test set (30% instead of 20%)")
-    st.markdown("- SMOTE with conservative parameters")
-    st.markdown('</div>', unsafe_allow_html=True)
-    
     # Auto train models to get accuracy
     with st.spinner("Training models with robust validation..."):
         success = predictor.auto_train_models()
@@ -697,7 +687,7 @@ def show_model_accuracy(predictor):
         st.error("❌ Cannot load dataset. Please ensure the dataset file exists in the correct location.")
         return
     
-    # Display SMOTE information - POSITIONED AFTER TRAINING
+    # Display SMOTE information - WARNA KUNING
     if predictor.smote_applied and predictor.class_distribution_before is not None:
         st.markdown('<div class="smote-info">', unsafe_allow_html=True)
         st.markdown("### 🔄 **SMOTE Class Balancing Applied**")
@@ -718,6 +708,16 @@ def show_model_accuracy(predictor):
             st.write("Balanced: ✅")
         
         st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Overfitting warning - WARNA MERAH - DIPINDAHKAN SETELAH SMOTE
+    st.markdown('<div class="overfitting-warning">', unsafe_allow_html=True)
+    st.markdown("### ⚠️ **Overfitting Prevention Measures Applied**")
+    st.markdown("**To prevent overfitting, we have implemented:**")
+    st.markdown("- Strong regularization in Random Forest (shallow trees, more samples required)")
+    st.markdown("- Cross-validation for reliable performance estimation")
+    st.markdown("- Larger test set (30% instead of 20%)")
+    st.markdown("- SMOTE with conservative parameters")
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Select relevant features
     feature_columns = [
