@@ -659,7 +659,7 @@ def show_about_page(predictor):
     with dev_col1:
         st.markdown("""
         ### Ridha Ash Siddiqy
-        **ML Developer & Data Scientist**
+        **ML Engineer & Data Scientist**
         
         This application represents the intersection of healthcare technology and artificial intelligence, 
         developed with the goal of making advanced medical risk assessment more accessible to the public.
@@ -1481,6 +1481,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
