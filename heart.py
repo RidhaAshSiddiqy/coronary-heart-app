@@ -347,6 +347,28 @@ def main():
             padding: 0.5rem 0;
             font-size: 1.1rem;
         }
+        .home-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .feature-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+            border-left: 4px solid #e63946;
+        }
+        .about-section {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -358,25 +380,29 @@ def main():
     # Initialize predictor
     predictor = CoronaryHeartPredictor()
 
-    # Sidebar - NAVIGATION WITH EMOJIS - PREDICTION DIBAWAH SEKALI
+    # Sidebar - NAVIGATION WITH EMOJIS - UPDATED WITH HOME AND ABOUT
     st.sidebar.title("🧭 Navigation")
     
-    # Main content navigation with emojis - URUTAN DIPERBAIKI
+    # Main content navigation with emojis - UPDATED ORDER
     app_mode = st.sidebar.radio(
         "Choose Section:",
-        ["📊 Data Analysis", "📈 Model Accuracy", "📉 Data Visualization", "🔍 Prediction"],
+        ["🏠 Home", "📊 Data Analysis", "📈 Model Accuracy", "📉 Data Visualization", "🔍 Prediction", "ℹ️ About"],
         key="navigation"
     )
 
-    # Map navigation selection to functions - URUTAN DIPERBAIKI
-    if "Data Analysis" in app_mode:
+    # Map navigation selection to functions - UPDATED
+    if "Home" in app_mode:
+        show_home_page(predictor)
+    elif "Data Analysis" in app_mode:
         show_data_analysis(predictor)
     elif "Model Accuracy" in app_mode:
         show_model_accuracy(predictor)
     elif "Data Visualization" in app_mode:
         show_data_visualization(predictor)
-    else:
+    elif "Prediction" in app_mode:
         show_prediction_interface(predictor)
+    else:
+        show_about_page(predictor)
 
     # Footer with correct copyright
     st.markdown("---")
@@ -384,6 +410,298 @@ def main():
     st.markdown("### Copyright © 2025 - Coronary Heart Disease Prediction System")
     st.markdown("**Medical AI Assistant for Early Detection of Heart Conditions. All Rights Reserved. Created by Ridha Ash Siddiqy.**")
     st.markdown('</div>', unsafe_allow_html=True)
+
+def show_home_page(predictor):
+    """Show home page with overview and features"""
+    st.header("🏠 Welcome to Coronary Heart Disease Predictor")
+    
+    # Hero Section
+    st.markdown("""
+    <div class="home-hero">
+        <h1 style="color: white; margin-bottom: 1rem;">Protect Your Heart Health with AI</h1>
+        <p style="font-size: 1.2rem; color: white; margin-bottom: 2rem;">
+        Advanced machine learning technology for early detection of coronary heart disease risk
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Introduction
+    st.markdown("""
+    ## 🎯 Our Mission
+    
+    Coronary Heart Disease (CHD) remains one of the leading causes of mortality worldwide. 
+    Our AI-powered prediction system aims to revolutionize early detection and risk assessment, 
+    empowering individuals and healthcare professionals with data-driven insights for better 
+    cardiovascular health management.
+    """)
+    
+    # Key Features
+    st.subheader("🚀 Key Features")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>🔍 Smart Prediction</h3>
+            <p>Advanced AI algorithms analyze multiple health parameters to assess coronary heart disease risk with high accuracy</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>📊 Data Analytics</h3>
+            <p>Comprehensive data visualization and analysis tools to understand patterns and risk factors in cardiovascular health</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>🤖 Dual AI Models</h3>
+            <p>Utilizes both Random Forest and Logistic Regression models for robust and reliable predictions</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # How It Works
+    st.subheader("🔄 How It Works")
+    
+    steps_col1, steps_col2 = st.columns(2)
+    
+    with steps_col1:
+        st.markdown("""
+        ### 1. Data Collection
+        - Gather comprehensive health parameters including:
+          - Personal demographics (Age, Gender, BMI)
+          - Blood measurements (Glucose, Cholesterol, LDL, HDL)
+          - Medical history and lifestyle factors
+        
+        ### 2. Data Processing
+        - Automated data cleaning and preprocessing
+        - Handling missing values and data normalization
+        - Feature engineering for optimal model performance
+        """)
+    
+    with steps_col2:
+        st.markdown("""
+        ### 3. AI Analysis
+        - Machine learning model training with cross-validation
+        - SMOTE technique for handling class imbalance
+        - Comprehensive model evaluation and validation
+        
+        ### 4. Risk Assessment
+        - Real-time prediction of coronary heart disease risk
+        - Confidence scoring for each prediction
+        - Detailed risk factor analysis and recommendations
+        """)
+    
+    # Quick Stats
+    st.subheader("📈 System Overview")
+    
+    stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
+    
+    with stats_col1:
+        st.metric("AI Models", "2", "Random Forest + Logistic Regression")
+    
+    with stats_col2:
+        st.metric("Health Parameters", "18+", "Comprehensive Coverage")
+    
+    with stats_col3:
+        st.metric("Data Processing", "Auto-Cleaning", "Missing Values Handled")
+    
+    with stats_col4:
+        st.metric("Prediction Accuracy", "High", "Cross-Validated")
+    
+    # Call to Action
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem;">
+        <h2>Ready to Assess Your Heart Health?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+        Navigate to the <strong>Prediction</strong> section to get started with your personalized risk assessment
+        </p>
+        <p style="color: #666;">
+        <em>Remember: This tool is for educational and awareness purposes. Always consult healthcare professionals for medical advice.</em>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def show_about_page(predictor):
+    """Show about page with detailed information"""
+    st.header("ℹ️ About This Application")
+    
+    # Application Overview
+    st.markdown("""
+    <div class="about-section">
+        <h2>🎯 Application Overview</h2>
+        <p>
+        The <strong>Coronary Heart Disease Predictor</strong> is an advanced AI-powered web application 
+        designed to assess the risk of developing coronary heart disease using machine learning algorithms. 
+        This tool combines medical data analysis with cutting-edge artificial intelligence to provide 
+        early warnings and risk assessments for cardiovascular health.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Technology Stack
+    st.subheader("🛠️ Technology Stack")
+    
+    tech_col1, tech_col2 = st.columns(2)
+    
+    with tech_col1:
+        st.markdown("""
+        ### Machine Learning & AI
+        - **Python**: Primary programming language
+        - **Scikit-learn**: Machine learning algorithms
+        - **Pandas & NumPy**: Data manipulation and analysis
+        - **Imbalanced-learn**: Handling class imbalance with SMOTE
+        
+        ### Algorithms Implemented
+        - Random Forest Classifier
+        - Logistic Regression
+        - Cross-validation techniques
+        - Feature importance analysis
+        """)
+    
+    with tech_col2:
+        st.markdown("""
+        ### Web Framework & Visualization
+        - **Streamlit**: Web application framework
+        - **Matplotlib & Seaborn**: Data visualization
+        - **Plotly**: Interactive charts (if applicable)
+        
+        ### Data Processing
+        - Automated data cleaning pipeline
+        - StandardScaler for feature normalization
+        - LabelEncoder for categorical variables
+        - Comprehensive missing value handling
+        """)
+    
+    # Methodology
+    st.subheader("🔬 Scientific Methodology")
+    
+    st.markdown("""
+    ### Data Preprocessing Pipeline
+    1. **Data Loading**: Import and validate dataset integrity
+    2. **Target Variable Definition**: Binary classification (Low Risk vs High Risk)
+    3. **Automated Cleaning**: Handle missing values and data formatting issues
+    4. **Feature Engineering**: Encode categorical variables and scale numerical features
+    5. **Class Imbalance Handling**: Apply SMOTE for balanced training data
+    
+    ### Model Development
+    - **Dual Model Approach**: Implement both ensemble and linear models
+    - **Robust Validation**: 5-fold cross-validation for reliable performance estimates
+    - **Overfitting Prevention**: Regularization and hyperparameter optimization
+    - **Performance Metrics**: Accuracy, Precision, Recall, F1-Score, and Confusion Matrix analysis
+    """)
+    
+    # Features Overview
+    st.subheader("🌟 Key Features")
+    
+    features_col1, features_col2 = st.columns(2)
+    
+    with features_col1:
+        st.markdown("""
+        ### 📊 Analytical Capabilities
+        - Comprehensive data analysis and visualization
+        - Missing value analysis and cleaning reports
+        - Class distribution analysis
+        - Correlation heatmaps and feature relationships
+        
+        ### 🤖 Prediction Engine
+        - Real-time risk assessment
+        - Dual-model comparison (Random Forest & Logistic Regression)
+        - Confidence scoring for predictions
+        - Detailed risk factor breakdown
+        """)
+    
+    with features_col2:
+        st.markdown("""
+        ### 📈 Visualization Tools
+        - Interactive data exploration
+        - Multiple chart types (bar, pie, scatter, box plots)
+        - Feature distribution analysis
+        - Model performance metrics visualization
+        
+        ### 🎯 User Experience
+        - Intuitive web interface
+        - Step-by-step prediction workflow
+        - Comprehensive health recommendations
+        - Mobile-responsive design
+        """)
+    
+    # Medical Disclaimer
+    st.subheader("⚠️ Important Medical Disclaimer")
+    
+    st.markdown("""
+    <div style="background-color: #fff3cd; padding: 1.5rem; border-radius: 10px; border-left: 5px solid #ffc107;">
+        <h4 style="color: #856404; margin-top: 0;">Medical Advisory Notice</h4>
+        <p style="color: #856404; margin-bottom: 0;">
+        <strong>This application is designed for educational and awareness purposes only.</strong> 
+        It is not intended to replace professional medical advice, diagnosis, or treatment. 
+        The predictions generated by this AI system should be considered as risk assessment tools 
+        rather than definitive medical diagnoses.
+        </p>
+        <p style="color: #856404; margin-bottom: 0;">
+        <strong>Always consult qualified healthcare professionals</strong> for any health concerns 
+        or before making medical decisions. The developers and operators of this application 
+        are not liable for any medical decisions made based on the information provided by this tool.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Developer Information
+    st.subheader("👨‍💻 Developer Information")
+    
+    dev_col1, dev_col2 = st.columns([2, 1])
+    
+    with dev_col1:
+        st.markdown("""
+        ### Ridha Ash Siddiqy
+        **AI Developer & Data Scientist**
+        
+        This application represents the intersection of healthcare technology and artificial intelligence, 
+        developed with the goal of making advanced medical risk assessment more accessible to the public.
+        
+        **Specializations:**
+        - Machine Learning & Artificial Intelligence
+        - Healthcare Data Analytics
+        - Web Application Development
+        - Data Visualization
+        """)
+    
+    with dev_col2:
+        st.markdown("""
+        ### Contact & Support
+        For technical support, feature requests, or collaboration inquiries:
+        
+        **Application Version:** 1.0  
+        **Last Updated:** 2025  
+        **Framework:** Streamlit  
+        **License:** All Rights Reserved
+        """)
+    
+    # Future Enhancements
+    st.subheader("🚀 Future Enhancements")
+    
+    st.markdown("""
+    ### Planned Features
+    - **Real-time Data Integration**: Connect with wearable health devices
+    - **Advanced AI Models**: Implement deep learning and ensemble methods
+    - **Multi-language Support**: Expand accessibility globally
+    - **Mobile Application**: Native iOS and Android apps
+    - **Clinical Integration**: HIPAA-compliant healthcare system integration
+    - **Longitudinal Tracking**: Monitor risk progression over time
+    
+    ### Research Directions
+    - Integration of genetic risk factors
+    - Social determinants of health analysis
+    - Predictive modeling for disease progression
+    - Personalized intervention recommendations
+    """)
+
+# ... (ALL OTHER EXISTING FUNCTIONS REMAIN EXACTLY THE SAME - show_data_analysis, show_prediction_interface, show_model_accuracy, show_data_visualization, display_risk_analysis)
 
 def show_data_analysis(predictor):
     """Show data analysis interface - WITH CLEANING INFO"""
@@ -1163,6 +1481,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
