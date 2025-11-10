@@ -386,7 +386,7 @@ def main():
     # Main content navigation with emojis - UPDATED ORDER
     app_mode = st.sidebar.radio(
         "Choose Section:",
-        ["🏠 Home", "📊 Data Analysis", "📈 Model Accuracy", "📉 Data Visualization", "🔍 Prediction", "ℹ️ About"],
+        ["🏠 Home", "📊 Data Analysis", "📈 Machine Learning", "📉 Data Visualization", "🔍 Prediction", "ℹ️ About"],
         key="navigation"
     )
 
@@ -396,7 +396,7 @@ def main():
     elif "Data Analysis" in app_mode:
         show_data_analysis(predictor)
     elif "Model Accuracy" in app_mode:
-        show_model_accuracy(predictor)
+        show_machine_learning(predictor)
     elif "Data Visualization" in app_mode:
         show_data_visualization(predictor)
     elif "Prediction" in app_mode:
@@ -973,7 +973,7 @@ def show_prediction_interface(predictor):
             st.subheader("📊 Risk Factors Analysis")
             display_risk_analysis(input_data)
 
-def show_model_accuracy(predictor):
+def show_machine_learning(predictor):
     """Show model accuracy comparison with comprehensive overfitting analysis"""
     st.header("📈 Model Accuracy Comparison")
     
@@ -1481,6 +1481,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
