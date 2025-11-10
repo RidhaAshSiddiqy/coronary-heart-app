@@ -395,8 +395,8 @@ def main():
         show_home_page(predictor)
     elif "Data Analysis" in app_mode:
         show_data_analysis(predictor)
-    elif "Model Accuracy" in app_mode:
-        show_machine_learning(predictor)
+    elif "Machine Learning" in app_mode:
+        show_model_accuracy(predictor)
     elif "Data Visualization" in app_mode:
         show_data_visualization(predictor)
     elif "Prediction" in app_mode:
@@ -973,7 +973,7 @@ def show_prediction_interface(predictor):
             st.subheader("📊 Risk Factors Analysis")
             display_risk_analysis(input_data)
 
-def show_machine_learning(predictor):
+def show_model_accuracy(predictor):
     """Show model accuracy comparison with comprehensive overfitting analysis"""
     st.header("📈 Model Accuracy Comparison")
     
@@ -1481,6 +1481,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
