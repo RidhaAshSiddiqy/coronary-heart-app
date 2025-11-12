@@ -701,7 +701,7 @@ def show_about_page(predictor):
     - Personalized intervention recommendations
     """)
 
-# ... (ALL OTHER EXISTING FUNCTIONS REMAIN EXACTLY THE SAME - show_data_analysis, show_prediction_interface, show_model_accuracy, show_data_visualization, display_risk_analysis)
+# ... (ALL OTHER EXISTING FUNCTIONS REMAIN EXACTLY THE SAME - show_data_analysis, show_prediction_interface, show_data_visualization, display_risk_analysis)
 
 def show_data_analysis(predictor):
     """Show data analysis interface - WITH CLEANING INFO"""
@@ -1149,23 +1149,66 @@ def show_model_accuracy(predictor):
         else:
             st.success("✅ Good generalization")
     
-    # Feature Importance (Random Forest only)
-    st.subheader("🔍 Random Forest Feature Importance")
-    if predictor.rf_model is not None:
-        feature_importance = pd.DataFrame({
-            'feature': available_features,
-            'importance': predictor.rf_model.feature_importances_
-        }).sort_values('importance', ascending=False)
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.barplot(data=feature_importance.head(10), x='importance', y='feature', ax=ax)
-        ax.set_title('Top 10 Most Important Features (Random Forest)')
-        ax.set_xlabel('Feature Importance')
-        st.pyplot(fig)
-        
-        # Display feature importance table
-        st.subheader("📋 Feature Importance Table")
-        st.dataframe(feature_importance.head(10))
+    # Feature Importance - BOTH MODELS
+    st.subheader("🔍 Feature Importance Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**🌲 Random Forest Feature Importance**")
+        if predictor.rf_model is not None:
+            feature_importance_rf = pd.DataFrame({
+                'feature': available_features,
+                'importance': predictor.rf_model.feature_importances_
+            }).sort_values('importance', ascending=False)
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            sns.barplot(data=feature_importance_rf.head(10), x='importance', y='feature', ax=ax)
+            ax.set_title('Top 10 Most Important Features (Random Forest)')
+            ax.set_xlabel('Feature Importance')
+            st.pyplot(fig)
+    
+    with col2:
+        st.write("**📈 Logistic Regression Feature Importance**")
+        if predictor.lr_model is not None:
+            # For Logistic Regression, use absolute coefficients as importance
+            feature_importance_lr = pd.DataFrame({
+                'feature': available_features,
+                'importance': np.abs(predictor.lr_model.coef_[0])
+            }).sort_values('importance', ascending=False)
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            sns.barplot(data=feature_importance_lr.head(10), x='importance', y='feature', ax=ax)
+            ax.set_title('Top 10 Most Important Features (Logistic Regression)')
+            ax.set_xlabel('Feature Importance (Absolute Coefficients)')
+            st.pyplot(fig)
+    
+    # Feature Importance Tables - BOTH MODELS
+    st.subheader("📋 Feature Importance Tables")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**🌲 Random Forest Feature Importance Table**")
+        if predictor.rf_model is not None:
+            feature_importance_rf = pd.DataFrame({
+                'Feature': available_features,
+                'Importance': predictor.rf_model.feature_importances_
+            }).sort_values('Importance', ascending=False)
+            
+            st.dataframe(feature_importance_rf.head(10))
+    
+    with col2:
+        st.write("**📈 Logistic Regression Feature Importance Table**")
+        if predictor.lr_model is not None:
+            # For Logistic Regression, show both coefficients and absolute values
+            feature_importance_lr = pd.DataFrame({
+                'Feature': available_features,
+                'Coefficient': predictor.lr_model.coef_[0],
+                'Absolute_Importance': np.abs(predictor.lr_model.coef_[0])
+            }).sort_values('Absolute_Importance', ascending=False)
+            
+            st.dataframe(feature_importance_lr.head(10))
 
 def show_data_visualization(predictor):
     """Show data visualization - USE CLEANED DATA"""
