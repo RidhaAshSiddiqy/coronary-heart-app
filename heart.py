@@ -849,12 +849,14 @@ def show_prediction_interface(predictor):
         height = st.number_input("Height (cm)", min_value=140, max_value=200, value=170, step=1)
         weight = st.number_input("Weight (kg)", min_value=40, max_value=150, value=70, step=1)
         
-        # Calculate BMI
+        # Calculate BMI (tanpa menampilkan metric card)
         if height > 0:
             bmi = weight / ((height/100) ** 2)
-            st.metric("BMI", f"{bmi:.2f}")
+            # Hanya tampilkan BMI sebagai teks biasa, bukan metric card
+            st.write(f"**BMI:** {bmi:.2f}")
         else:
             bmi = 22.0
+            st.write(f"**BMI:** {bmi:.2f}")
     
     with col2:
         st.subheader("💉 Blood Measurements")
@@ -894,14 +896,8 @@ def show_prediction_interface(predictor):
             ["Normal", "Coronary"]
         )
     
-    # Model recommendation based on expected performance
-    st.markdown('<div class="good-model">', unsafe_allow_html=True)
-    st.markdown("### 💡 **Model Recommendation**")
-    st.markdown("**Logistic Regression is recommended for more reliable predictions**")
-    st.markdown("- Less prone to overfitting")
-    st.markdown("- Better generalization to new data")
-    st.markdown("- More interpretable results")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Model recommendation (tetap ditampilkan tapi tanpa kotak biru)
+    st.info("**💡 Model Recommendation:** Logistic Regression is recommended for more reliable predictions - less prone to overfitting and better generalization to new data.")
 
     # Model selection for prediction
     st.subheader("🤖 Model Selection")
@@ -1524,6 +1520,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
