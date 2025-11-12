@@ -835,7 +835,7 @@ def show_data_analysis(predictor):
         dataset_size = cleaned_df.size
         zero_percentage = (total_zeros / dataset_size) * 100
         st.metric("Percentage of Zero Values", f"{zero_percentage:.2f}%")
-
+        
 def show_prediction_interface(predictor):
     """Show prediction interface"""
     st.header("🔍 Risk Prediction")
@@ -849,14 +849,14 @@ def show_prediction_interface(predictor):
         height = st.number_input("Height (cm)", min_value=140, max_value=200, value=170, step=1)
         weight = st.number_input("Weight (kg)", min_value=40, max_value=150, value=70, step=1)
         
-        # Calculate BMI (tanpa menampilkan metric card)
+        # Calculate BMI dengan font yang lebih besar
         if height > 0:
             bmi = weight / ((height/100) ** 2)
-            # Hanya tampilkan BMI sebagai teks biasa, bukan metric card
-            st.write(f"**BMI:** {bmi:.2f}")
+            # Tampilkan BMI dengan font yang lebih besar menggunakan HTML
+            st.markdown(f"<h3 style='color: #e63946; font-size: 1.5rem;'>BMI: {bmi:.2f}</h3>", unsafe_allow_html=True)
         else:
             bmi = 22.0
-            st.write(f"**BMI:** {bmi:.2f}")
+            st.markdown(f"<h3 style='color: #e63946; font-size: 1.5rem;'>BMI: {bmi:.2f}</h3>", unsafe_allow_html=True)
     
     with col2:
         st.subheader("💉 Blood Measurements")
@@ -1520,6 +1520,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
