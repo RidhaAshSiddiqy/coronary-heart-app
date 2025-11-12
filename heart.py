@@ -853,10 +853,10 @@ def show_prediction_interface(predictor):
         if height > 0:
             bmi = weight / ((height/100) ** 2)
             # Tampilkan BMI dengan font yang lebih besar menggunakan HTML
-            st.markdown(f"<h3 style='color: #e63946; font-size: 2.5rem;'>BMI: {bmi:.2f}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #e63946; font-size: 3.0rem;'>BMI: {bmi:.2f}</h3>", unsafe_allow_html=True)
         else:
             bmi = 22.0
-            st.markdown(f"<h3 style='color: #e63946; font-size: 2.5rem;'>BMI: {bmi:.2f}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #e63946; font-size: 3.0rem;'>BMI: {bmi:.2f}</h3>", unsafe_allow_html=True)
     
     with col2:
         st.subheader("💉 Blood Measurements")
@@ -1520,6 +1520,7 @@ def display_risk_analysis(input_data):
 
 if __name__ == "__main__":
     main()
+
 
 
 
